@@ -38,8 +38,16 @@ class RSSFeedReader {
             res.send('<h1>Are you lost ? * &lt;--- You are here !</h1>');
         });
 
-        io.on('connection', function(socket){
+
+        var rssFeedReaderNamespace = io.of("/RSSFeedReader");
+
+        rssFeedReaderNamespace.on('connection', function(socket){
             Logger.info("New The 6th Screen SourcesServer Connection : " + socket.id);
+
+            socket.on('RetrieveFeedContent', function(params) {
+                Logger.debug("RetrieveFeedContent Action with params :");
+                Logger.debug(params);
+            });
 
             socket.on('disconnect', function(){
                 Logger.info("The 6th Screen SourcesServer disconnected : " + socket.id);
