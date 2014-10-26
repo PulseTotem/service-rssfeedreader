@@ -52,7 +52,7 @@ class RSSFeedReader {
             Logger.info("New The 6th Screen SourcesServer Connection : " + socket.id);
 
             socket.on('RetrieveFeedContent', function(params) {
-                self._retrieveFeedContent(params);
+                self._retrieveFeedContent(params, socket);
             });
 
             socket.on('disconnect', function(){
@@ -72,7 +72,9 @@ class RSSFeedReader {
      * @private
      * @param {Object} params - Params to retrieve feed : Feed URL and limit of articles to return.
      */
-    private _retrieveFeedContent(params : any) {
+    private _retrieveFeedContent(params : any, socket : any) {
+        var self = this;
+
         Logger.debug("RetrieveFeedContent Action with params :");
         Logger.debug(params);
         //TODO : Change format
@@ -101,10 +103,16 @@ class RSSFeedReader {
             feedNode.setPubDate(item.pubDate);
 
             feedContent.addFeedNode(feedNode);
+        }, function() {
+            self._sendNewInfos(feedContent, socket);
         });
     }
 
-    private fetch(feed, itemProcessFunction) {
+    private _sendNewInfos(newInfos : Info, socket : any) {
+        socket.emit("newInfos", newInfos);
+    }
+
+    private fetch(feed, itemProcessFunction, endFetchProcessFunction) {
         var self = this;
         // Define our streams
         var req = request(feed, {timeout: 10000, pool: false});
@@ -136,6 +144,7 @@ class RSSFeedReader {
             while (post = this.read()) {
                 itemProcessFunction(post);
             }
+            endFetchProcessFunction();
         });
     }
 
