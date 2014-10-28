@@ -2,19 +2,12 @@
  * @author Christian Brel <christian@the6thscreen.fr, ch.brel@gmail.com>
  */
 
-/// <reference path="../t6s-core/core-backend/libsdef/node.d.ts" />
-/// <reference path="../t6s-core/core-backend/libsdef/express.d.ts" />
-/// <reference path="../t6s-core/core-backend/libsdef/socket.io-0.9.10.d.ts" />
-
+/// <reference path="../t6s-core/core-backend/scripts/Server.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/LoggerLevel.ts" />
 
 /// <reference path="../t6s-core/core/scripts/infotype/FeedContent.ts" />
 /// <reference path="../t6s-core/core/scripts/infotype/FeedNode.ts" />
-
-var http = require("http");
-var express = require("express");
-var sio = require("socket.io");
 
 var FeedParser = require('feedparser');
 var request = require('request');
@@ -24,8 +17,9 @@ var request = require('request');
  * Represents the The 6th Screen RSSFeedReader' Service.
  *
  * @class RSSFeedReader
+ * @extends Server
  */
-class RSSFeedReader {
+class RSSFeedReader extends Server {
 
     /**
      * Method to run the server.
@@ -35,15 +29,7 @@ class RSSFeedReader {
     run() {
         var self = this;
 
-        var listeningPort = process.env.PORT_RSSFEEDREADER || 6002;
 
-        var app = express();
-        var httpServer = http.createServer(app);
-        var io = sio.listen(httpServer);
-
-        app.get('/', function(req, res){
-            res.send('<h1>Are you lost ? * &lt;--- You are here !</h1>');
-        });
 
 
         var rssFeedReaderNamespace = io.of("/RSSFeedReader");
@@ -60,9 +46,7 @@ class RSSFeedReader {
             });
         });
 
-        httpServer.listen(listeningPort, function(){
-            Logger.info("The 6th Screen RSSFeedReader' Service listening on *:" + listeningPort);
-        });
+
     }
 
     /**
@@ -186,34 +170,6 @@ class RSSFeedReader {
 
 }
 
-var logLevel = LoggerLevel.Error;
-
-if(process.argv.length > 2) {
-    var param = process.argv[2];
-    var keyVal = param.split("=");
-    if(keyVal.length > 1) {
-        if (keyVal[0] == "loglevel") {
-            switch(keyVal[1]) {
-                case "error" :
-                    logLevel = LoggerLevel.Error;
-                    break;
-                case "warning" :
-                    logLevel = LoggerLevel.Warning;
-                    break;
-                case "info" :
-                    logLevel = LoggerLevel.Info;
-                    break;
-                case "debug" :
-                    logLevel = LoggerLevel.Debug;
-                    break;
-                default :
-                    logLevel = LoggerLevel.Error;
-            }
-        }
-    }
-}
-
-Logger.setLevel(logLevel);
-
-var serverInstance = new RSSFeedReader();
+var listeningPort = process.env.PORT_RSSFEEDREADER || 6002;
+var serverInstance = new RSSFeedReader(listeningPort, process.argv);
 serverInstance.run();
