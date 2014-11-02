@@ -4,7 +4,7 @@
 
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 
-/// <reference path="../t6s-core/core-backend/scripts/server/NamespaceManager.ts" />
+/// <reference path="../t6s-core/core-backend/scripts/server/SourceNamespaceManager.ts" />
 /// <reference path="../t6s-core/core/scripts/infotype/FeedContent.ts" />
 /// <reference path="../t6s-core/core/scripts/infotype/FeedNode.ts" />
 
@@ -12,7 +12,7 @@ var FeedParser = require('feedparser');
 var request = require('request');
 //var Iconv = require('iconv');
 
-class RSSFeedReaderNamespaceManager extends NamespaceManager {
+class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
 
     /**
      * Constructor.
@@ -29,9 +29,12 @@ class RSSFeedReaderNamespaceManager extends NamespaceManager {
      * Retrieve a RSS/ATOM Feed and return the feed in "InfoType" format.
      *
      * @method retrieveFeedContent
+     * @param {number} zoneId - The Zone's Id.
+     * @param {number} callId - The Call's Id.
      * @param {Object} params - Params to retrieve feed : Feed URL and limit of articles to return.
+     * @param {RSSFeedReaderNamespaceManager} self - the RSSFeedReaderNamespaceManager's instance.
      */
-    retrieveFeedContent(params : any, self : RSSFeedReaderNamespaceManager = null) {
+    retrieveFeedContent(zoneId : number, callId : number, params : any, self : RSSFeedReaderNamespaceManager = null) {
         if(self == null) {
             self = this;
         }
@@ -65,12 +68,8 @@ class RSSFeedReaderNamespaceManager extends NamespaceManager {
 
             feedContent.addFeedNode(feedNode);
         }, function() {
-            self._sendNewInfos(feedContent, self.socket);
+            self.sendNewInfoToClient(zoneId, callId, feedContent);
         });
-    }
-
-    _sendNewInfos(newInfos : Info, socket : any) {
-        socket.emit("newInfos", newInfos);
     }
 
     fetch(feed, itemProcessFunction, endFetchProcessFunction) {

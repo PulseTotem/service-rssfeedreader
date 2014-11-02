@@ -2,7 +2,7 @@
  * @author Christian Brel <christian@the6thscreen.fr, ch.brel@gmail.com>
  */
 
-/// <reference path="../t6s-core/core-backend/scripts/server/Server.ts" />
+/// <reference path="../t6s-core/core-backend/scripts/server/SourceServer.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 
 /// <reference path="./RSSFeedReaderNamespaceManager.ts" />
@@ -13,9 +13,9 @@
  * Represents the The 6th Screen RSSFeedReader' Service.
  *
  * @class RSSFeedReader
- * @extends Server
+ * @extends SourceServer
  */
-class RSSFeedReader extends Server {
+class RSSFeedReader extends SourceServer {
 
 
 
