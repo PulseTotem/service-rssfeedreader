@@ -2,6 +2,9 @@
  * @author Christian Brel <christian@the6thscreen.fr, ch.brel@gmail.com>
  */
 
+/// <reference path="../libsdef/datejs.d.ts" />
+/// <reference path="../t6s-core/core-backend/libsdef/node-uuid.d.ts" />
+
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 
 /// <reference path="../t6s-core/core-backend/scripts/server/SourceNamespaceManager.ts" />
@@ -11,6 +14,9 @@
 var FeedParser = require('feedparser');
 var request = require('request');
 //var Iconv = require('iconv');
+
+var DateJS = <any>Date;
+var uuid = require('node-uuid');
 
 class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
 
@@ -49,6 +55,15 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
 
         self.fetch(params.FeedURL, function(item) {
             if(!feedContentOk) {
+                Logger.debug(item.meta);
+                item.guid, 0, pubDate, pubDate.addDays(7),
+                feedContent.setId(uuid.v1());
+                feedContent.setPriority(0);
+                var creaDate : any = DateJS.parse(item.meta.date);
+                feedContent.setCreationDate(creaDate);
+                feedContent.setObsoleteDate(creaDate.addDays(7));
+                feedContent.setDurationToDisplay(10000);
+
                 feedContent.setTitle(item.meta.title);
                 feedContent.setDescription(item.meta.description);
                 feedContent.setUrl(item.meta.xmlUrl);
@@ -58,13 +73,15 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
                 }
                 feedContentOk = true;
             }
-            var feedNode : FeedNode = new FeedNode();
+
+            var pubDate : any = DateJS.parse(item.pubDate);
+
+            var feedNode : FeedNode = new FeedNode(item.guid, 0, pubDate, pubDate.addDays(7), 10000);
             feedNode.setTitle(item.title);
             feedNode.setDescription(item.description);
             feedNode.setSummary(item.summary);
             feedNode.setAuthor(item.author);
             feedNode.setUrl(item.link);
-            feedNode.setPubDate(item.pubDate);
 
             feedContent.addFeedNode(feedNode);
         }, function() {
