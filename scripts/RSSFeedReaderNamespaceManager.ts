@@ -13,6 +13,7 @@
 
 var FeedParser = require('feedparser');
 var request = require('request');
+var datejs = require('datejs');
 //var Iconv = require('iconv');
 
 var DateJS = <any>Date;
@@ -56,10 +57,10 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
         self.fetch(params.FeedURL, function(item) {
             if(!feedContentOk) {
                 Logger.debug(item.meta);
-                item.guid, 0, pubDate, pubDate.addDays(7),
                 feedContent.setId(uuid.v1());
                 feedContent.setPriority(0);
-                var creaDate : any = DateJS.parse(item.meta.date);
+                var creaDesc : string = item.meta.date.toString();
+                var creaDate : any = DateJS.parse(creaDesc);
                 feedContent.setCreationDate(creaDate);
                 feedContent.setObsoleteDate(creaDate.addDays(7));
                 feedContent.setDurationToDisplay(10000);
