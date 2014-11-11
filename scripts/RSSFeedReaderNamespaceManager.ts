@@ -36,12 +36,10 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
      * Retrieve a RSS/ATOM Feed and return the feed in "InfoType" format.
      *
      * @method retrieveFeedContent
-     * @param {number} zoneId - The Zone's Id.
-     * @param {number} callId - The Call's Id.
      * @param {Object} params - Params to retrieve feed : Feed URL and limit of articles to return.
      * @param {RSSFeedReaderNamespaceManager} self - the RSSFeedReaderNamespaceManager's instance.
      */
-    retrieveFeedContent(zoneId : number, callId : number, params : any, self : RSSFeedReaderNamespaceManager = null) {
+    retrieveFeedContent(params : any, self : RSSFeedReaderNamespaceManager = null) {
         if(self == null) {
             self = this;
         }
@@ -86,7 +84,7 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
 
             feedContent.addFeedNode(feedNode);
         }, function() {
-            self.sendNewInfoToClient(zoneId, callId, feedContent);
+            self.sendNewInfoToClient(feedContent);
         });
     }
 
