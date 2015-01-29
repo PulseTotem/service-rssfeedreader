@@ -14,7 +14,6 @@
 var FeedParser = require('feedparser');
 var request = require('request');
 var datejs = require('datejs');
-//var Iconv = require('iconv');
 
 var DateJS = <any>Date;
 var uuid = require('node-uuid');
@@ -49,12 +48,12 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
         //TODO : Change format
         //TODO : Send result to SourcesServer
 
-        var feedContent : FeedContent = new FeedContent();
-        var feedContentOk = false;
+        var nbSend = 0;
 
         self.fetch(params.FeedURL, function(item) {
-            if(!feedContentOk) {
-                Logger.debug(item.meta);
+            var feedContent : FeedContent = new FeedContent();
+            //var feedContentOk = false;
+            //if(!feedContentOk) {
                 feedContent.setId(uuid.v1());
                 feedContent.setPriority(0);
                 var creaDesc : string = item.meta.date.toString();
@@ -70,8 +69,8 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
                 if(typeof(item.meta.image.url) != "undefined") {
                     feedContent.setLogo(item.meta.image.url);
                 }
-                feedContentOk = true;
-            }
+                //feedContentOk = true;
+            //}
 
             var pubDate : any = DateJS.parse(item.pubDate);
 
@@ -83,16 +82,27 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
             feedNode.setUrl(item.link);
 
             feedContent.addFeedNode(feedNode);
-        }, function() {
+
+            nbSend++;
+            Logger.debug("Send FeedContent to Client : " + nbSend);
+            Logger.debug(feedContent);
+
             self.sendNewInfoToClient(feedContent);
+
+        }, function(err) {
+            if (err) {
+                //console.log(err, err.stack);
+                Logger.error(err);
+            }
         });
     }
 
-    fetch(feed, itemProcessFunction, endFetchProcessFunction) {
+    fetch(feed, itemProcessFunction, errorCB) {
         var self = this;
         // Define our streams
         var req = request(feed, {timeout: 10000, pool: false});
         req.setMaxListeners(50);
+
         // Some feeds do not respond without user-agent and accept headers.
         req.setHeader('user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36');
         req.setHeader('accept', 'text/html,application/xhtml+xml');
@@ -100,63 +110,37 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
         var feedparser = new FeedParser();
 
         // Define our handlers
-        req.on('error', self.done);
+        req.on('error', errorCB);
+
         req.on('response', function(res) {
+            var stream = this;
+
             if (res.statusCode != 200) {
-                //TODO : Throw Exception ?
-                //return this.emit('error', new Error('Bad status code'));
-                Logger.error("Bad status code.");
+                return this.emit('error', new Error('Bad status code'));
+                //Logger.error("Bad status code.");
             }
-            var charset = self.getParams(res.headers['content-type'] || '').charset;
-            res = self.maybeTranslate(res, charset);
-            // And boom goes the dynamite
-            res.pipe(feedparser);
+
+            stream.pipe(feedparser);
         });
 
-        feedparser.on('error', self.done);
-        feedparser.on('end', self.done);
+        feedparser.on('error', errorCB);
+
         feedparser.on('readable', function() {
-            var post;
+
+            // This is where the action is!
+            var stream = this;
+            var item;
+            //var meta = this.meta // **NOTE** the "meta" is always available in the context of the feedparser instance
+
+            while (item = stream.read()) {
+                itemProcessFunction(item);
+            }
+
+            /*var post;
             while (post = this.read()) {
                 itemProcessFunction(post);
             }
-            endFetchProcessFunction();
+            endFetchProcessFunction();*/
         });
-    }
-
-    maybeTranslate(res, charset) {
-        /*var iconv;
-         // Use iconv if its not utf8 already.
-         if (!iconv && charset && !/utf-*8/i.test(charset)) {
-         try {
-         iconv = new Iconv(charset, 'utf-8');
-         Logger.debug('Converting from charset ' + charset + ' to utf-8');
-         iconv.on('error', this.done);
-         // If we're using iconv, stream will be the output of iconv
-         // otherwise it will remain the output of request
-         res = res.pipe(iconv);
-         } catch(err) {
-         res.emit('error', err);
-         }
-         }*/
-        return res;
-    }
-
-    getParams(str) {
-        var params = str.split(';').reduce(function (params, param) {
-            var parts = param.split('=').map(function (part) { return part.trim(); });
-            if (parts.length === 2) {
-                params[parts[0]] = parts[1];
-            }
-            return params;
-        }, {});
-        return params;
-    }
-
-    done(err) {
-        if (err) {
-            //console.log(err, err.stack);
-            Logger.error(err);
-        }
     }
 }
