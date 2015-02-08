@@ -51,24 +51,26 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
         var nbSend = 0;
 
         self.fetch(params.FeedURL, function(item) {
-            var feedContent : FeedContent = new FeedContent();
+            var feedContent:FeedContent = new FeedContent();
             //var feedContentOk = false;
             //if(!feedContentOk) {
-                feedContent.setId(uuid.v1());
-                feedContent.setPriority(0);
-                var creaDesc : string = item.meta.date.toString();
-                var creaDate : any = DateJS.parse(creaDesc);
+            feedContent.setId(uuid.v1());
+            feedContent.setPriority(0);
+            if (item.meta.date != null && typeof(item.meta.date) != "undefined") {
+                var creaDesc:string = item.meta.date.toString();
+                var creaDate:any = DateJS.parse(creaDesc);
                 feedContent.setCreationDate(creaDate);
                 feedContent.setObsoleteDate(creaDate.addDays(7));
-                feedContent.setDurationToDisplay(10000);
+            }
+            feedContent.setDurationToDisplay(10000);
 
-                feedContent.setTitle(item.meta.title);
-                feedContent.setDescription(item.meta.description);
-                feedContent.setUrl(item.meta.xmlUrl);
-                feedContent.setLanguage(item.meta.language);
-                if(typeof(item.meta.image.url) != "undefined") {
-                    feedContent.setLogo(item.meta.image.url);
-                }
+            feedContent.setTitle(item.meta.title);
+            feedContent.setDescription(item.meta.description);
+            feedContent.setUrl(item.meta.xmlUrl);
+            feedContent.setLanguage(item.meta.language);
+            if(typeof(item.meta.image.url) != "undefined") {
+                feedContent.setLogo(item.meta.image.url);
+            }
                 //feedContentOk = true;
             //}
 
