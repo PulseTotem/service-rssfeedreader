@@ -2,84 +2,64 @@
  * @author Christian Brel <christian@the6thscreen.fr, ch.brel@gmail.com>
  */
 
-/// <reference path="../t6s-core/core-backend/libsdef/node.d.ts" />
-/// <reference path="../t6s-core/core-backend/libsdef/express.d.ts" />
-/// <reference path="../t6s-core/core-backend/libsdef/socket.io-0.9.10.d.ts" />
-
+/// <reference path="../t6s-core/core-backend/scripts/server/SourceServer.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
-/// <reference path="../t6s-core/core-backend/scripts/LoggerLevel.ts" />
 
-var http = require("http");
-var express = require("express");
-var sio = require("socket.io");
+/// <reference path="./RSSFeedReaderNamespaceManager.ts" />
+
+
 
 /**
  * Represents the The 6th Screen RSSFeedReader' Service.
  *
  * @class RSSFeedReader
+ * @extends SourceServer
  */
-class RSSFeedReader {
+class RSSFeedReader extends SourceServer {
+
+
 
     /**
-     * Method to run the server.
+     * Constructor.
      *
-     * @method run
+     * @param {number} listeningPort - Server's listening port..
+     * @param {Array<string>} arguments - Server's command line arguments.
      */
-    run() {
+    constructor(listeningPort : number, arguments : Array<string>) {
+        super(listeningPort, arguments);
+
+        this.init();
+    }
+
+    /**
+     * Method to init the RSSFeedReader server.
+     *
+     * @method init
+     */
+    init() {
         var self = this;
 
-        var listeningPort = process.env.PORT_RSSFEEDREADER || 6002;
-
-        var app = express();
-        var httpServer = http.createServer(app);
-        var io = sio.listen(httpServer);
-
-        app.get('/', function(req, res){
-            res.send('<h1>Are you lost ? * &lt;--- You are here !</h1>');
-        });
-
-        io.on('connection', function(socket){
-            Logger.info("New The 6th Screen SourcesServer Connection : " + socket.id);
-
-            socket.on('disconnect', function(){
-                Logger.info("The 6th Screen SourcesServer disconnected : " + socket.id);
-            });
-        });
-
-        httpServer.listen(listeningPort, function(){
-            Logger.info("The 6th Screen RSSFeedReader' Service listening on *:" + listeningPort);
-        });
+        this.addNamespace("RSSFeedReader", RSSFeedReaderNamespaceManager);
     }
 }
 
-var logLevel = LoggerLevel.Error;
+/**
+ * Server's RSSFeedReader listening port.
+ *
+ * @property _RSSFeedReaderListeningPort
+ * @type number
+ * @private
+ */
+var _RSSFeedReaderListeningPort : number = process.env.PORT_RSSFEEDREADER || 6002;
 
-if(process.argv.length > 2) {
-    var param = process.argv[2];
-    var keyVal = param.split("=");
-    if(keyVal.length > 1) {
-        if (keyVal[0] == "loglevel") {
-            switch(keyVal[1]) {
-                case "error" :
-                    logLevel = LoggerLevel.Error;
-                    break;
-                case "warning" :
-                    logLevel = LoggerLevel.Warning;
-                    break;
-                case "info" :
-                    logLevel = LoggerLevel.Info;
-                    break;
-                case "debug" :
-                    logLevel = LoggerLevel.Debug;
-                    break;
-                default :
-                    logLevel = LoggerLevel.Error;
-            }
-        }
-    }
-}
+/**
+ * Server's RSSFeedReader command line arguments.
+ *
+ * @property _RSSFeedReaderArguments
+ * @type Array<string>
+ * @private
+ */
+var _RSSFeedReaderArguments : Array<string> = process.argv;
 
-Logger.setLevel(logLevel);
-
-var serverInstance = new RSSFeedReader();
+var serverInstance = new RSSFeedReader(_RSSFeedReaderListeningPort, _RSSFeedReaderArguments);
 serverInstance.run();
