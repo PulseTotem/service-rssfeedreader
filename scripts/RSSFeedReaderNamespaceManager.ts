@@ -82,6 +82,9 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
             feedNode.setSummary(item.summary);
             feedNode.setAuthor(item.author);
             feedNode.setUrl(item.link);
+            if(item.image != null && typeof(item.image) != "undefined" && item.image.url != null && typeof(item.image.url) != "undefined") {
+                feedNode.setMediaUrl(item.image.url);
+            }
 
             feedContent.addFeedNode(feedNode);
 
