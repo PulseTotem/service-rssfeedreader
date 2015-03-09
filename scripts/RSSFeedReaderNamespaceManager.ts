@@ -8,15 +8,15 @@
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 
 /// <reference path="../t6s-core/core-backend/scripts/server/SourceNamespaceManager.ts" />
-/// <reference path="../t6s-core/core/scripts/infotype/FeedContent.ts" />
-/// <reference path="../t6s-core/core/scripts/infotype/FeedNode.ts" />
+/// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/FeedContent.ts" />
+/// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/FeedNode.ts" />
 
-var FeedParser = require('feedparser');
-var request = require('request');
-var datejs = require('datejs');
+var FeedParser : any = require('feedparser');
+var request : any = require('request');
+var datejs : any = require('datejs');
 
-var DateJS = <any>Date;
-var uuid = require('node-uuid');
+var DateJS : any = <any>Date;
+var uuid : any = require('node-uuid');
 
 class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
 
