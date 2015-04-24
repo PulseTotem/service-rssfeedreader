@@ -1,0 +1,9 @@
+{
+  "name": "service-rssfeedreader",
+  "version": "0.0.1",
+  "devDependencies": {
+    "feedparser": "~0.19.2",
+    "request": "~2.46.0",
+    "datejs": "~1.0.0-rc1"
+  }
+}

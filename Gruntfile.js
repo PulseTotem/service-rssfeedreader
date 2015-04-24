@@ -47,6 +47,17 @@ module.exports = function (grunt) {
                     'devDependencies',
                     'overrides'
                 ]
+            },
+            packageHeroku: {
+              src: ['t6s-core/core-backend/package.json', 'packageHeroku.json'],
+              dest: 'heroku/package.json',
+              fields: [
+                'name',
+                'version',
+                'dependencies',
+                'devDependencies',
+                'overrides'
+              ]
             }
         },
 // ---------------------------------------------
@@ -63,6 +74,12 @@ module.exports = function (grunt) {
             },
             buildPackageReinit: {
                 files: 	[{'package.json': 'package-bak.json'}]
+            },
+            heroku: {
+              files: 	[{expand: true, cwd: 'build', src: ['**'], dest: 'heroku'}]
+            },
+            herokuProcfile: {
+              files: 	[{expand: true, cwd: 't6s-core/core-backend', src: ['Procfile'], dest: 'heroku'}]
             }
         },
 
@@ -71,7 +88,7 @@ module.exports = function (grunt) {
                 src: [
                     'scripts/**/*.ts'
                 ],
-                dest: 'build/js/Service-RSSFeedReader.js'
+                dest: 'build/js/Service.js'
             },
             test: {
                 src: [
@@ -87,7 +104,7 @@ module.exports = function (grunt) {
             },
             build: {
                 options: {
-                    script: 'build/js/Service-RSSFeedReader.js',
+                    script: 'build/js/Service.js',
                     args: ["loglevel=debug"]
                 }
             }
@@ -99,7 +116,7 @@ module.exports = function (grunt) {
 // ---------------------------------------------
         watch: {
             express: {
-                files:  [ 'build/js/Service-RSSFeedReader.js' ],
+                files:  [ 'build/js/Service.js' ],
                 tasks:  [ 'express:build' ],
                 options: {
                     spawn: false
@@ -163,6 +180,7 @@ module.exports = function (grunt) {
         clean: {
             package: ['package-bak.json', 'package-tmp.json'],
             build: ['build/'],
+            heroku: ['heroku/'],
             doc: ['doc'],
             test: ['build/tests/Test.js']
         }
@@ -177,6 +195,12 @@ module.exports = function (grunt) {
         grunt.task.run(['clean:package', 'clean:build']);
 
         grunt.task.run(['update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:build', 'clean:package']);
+    });
+
+    grunt.registerTask('heroku', function () {
+      grunt.task.run(['clean:heroku']);
+
+      grunt.task.run(['build', 'update_json:packageHeroku', 'copy:heroku', 'copy:herokuProcfile']);
     });
 
     grunt.registerTask('develop', ['build', 'express:build', 'watch']);

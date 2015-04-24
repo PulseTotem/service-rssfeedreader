@@ -50,7 +50,7 @@ class RSSFeedReader extends SourceServer {
  * @type number
  * @private
  */
-var _RSSFeedReaderListeningPort : number = process.env.PORT_RSSFEEDREADER || 6002;
+var _RSSFeedReaderListeningPort : number = process.env.PORT || 6002;
 
 /**
  * Server's RSSFeedReader command line arguments.
