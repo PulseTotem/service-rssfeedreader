@@ -43,17 +43,9 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
             self = this;
         }
 
-        Logger.debug("RetrieveFeedContent Action with params :");
-        Logger.debug(params);
-        //TODO : Change format
-        //TODO : Send result to SourcesServer
-
-        var nbSend = 0;
-
         self.fetch(params.FeedURL, function(item) {
             var feedContent:FeedContent = new FeedContent();
-            //var feedContentOk = false;
-            //if(!feedContentOk) {
+
             feedContent.setId(uuid.v1());
             feedContent.setPriority(0);
             if (item.meta.date != null && typeof(item.meta.date) != "undefined") {
@@ -71,12 +63,11 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
             if(typeof(item.meta.image.url) != "undefined") {
                 feedContent.setLogo(item.meta.image.url);
             }
-                //feedContentOk = true;
-            //}
+
 
             var pubDate : any = DateJS.parse(item.pubDate);
 
-            var feedNode : FeedNode = new FeedNode(item.guid, 0, pubDate, pubDate.addDays(7), 10000);
+            var feedNode : FeedNode = new FeedNode(item.guid, 0, pubDate, pubDate.addDays(7), parseInt(params.InfoDuration));
             feedNode.setTitle(item.title);
             feedNode.setDescription(item.description);
             feedNode.setSummary(item.summary);
@@ -87,10 +78,6 @@ class RSSFeedReaderNamespaceManager extends SourceNamespaceManager {
             }
 
             feedContent.addFeedNode(feedNode);
-
-            nbSend++;
-            Logger.debug("Send FeedContent to Client : " + nbSend);
-            Logger.debug(feedContent);
 
             self.sendNewInfoToClient(feedContent);
 
