@@ -20,7 +20,7 @@ class RetrieveFeedContent extends SourceItf {
 	constructor(params : any, feedReaderNamespaceManager : RSSFeedReaderNamespaceManager) {
 		super(params, feedReaderNamespaceManager);
 
-		if (this.checkParams(["FeedURL", "InfoDuration", "Limit"])) {
+		if (this.checkParams(["URL", "InfoDuration", "Limit"])) {
 			this.run();
 		}
 	}

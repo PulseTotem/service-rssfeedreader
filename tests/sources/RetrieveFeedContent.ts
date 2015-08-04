@@ -18,7 +18,7 @@ describe('RetrieveFeedContent', function() {
 			mocksource.expects("run").once();
 
 			var params = {
-				'FeedURL': "une super URL",
+				'URL': "une super URL",
 				'Limit': "10",
 				'InfoDuration': "24"
 			};
@@ -45,7 +45,7 @@ describe('RetrieveFeedContent', function() {
 			mocksource.expects("run").never();
 
 			var params = {
-				'FeedURL': "une super URL",
+				'URL': "une super URL",
 				'InfoDuration': "24"
 			};
 			new RetrieveFeedContent(params, mockns);
@@ -58,7 +58,7 @@ describe('RetrieveFeedContent', function() {
 			mocksource.expects("run").never();
 
 			var params = {
-				'FeedURL': "une super URL",
+				'URL': "une super URL",
 				'Limit': "10",
 			};
 			new RetrieveFeedContent(params, mockns);
