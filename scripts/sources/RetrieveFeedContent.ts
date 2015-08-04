@@ -20,58 +20,62 @@ class RetrieveFeedContent extends SourceItf {
 	constructor(params : any, feedReaderNamespaceManager : RSSFeedReaderNamespaceManager) {
 		super(params, feedReaderNamespaceManager);
 
-		this.checkParams(["FeedURL", "InfoDuration", "Limit"]);
-		this.run();
+		if (this.checkParams(["FeedURL", "InfoDuration", "Limit"])) {
+			this.run();
+		}
 	}
 
 	public run() {
 		var self = this;
 
-		this.fetch(self.getParams().FeedURL, function(item) {
-			var feedContent:FeedContent = new FeedContent();
-
-			feedContent.setId(uuid.v1());
-			feedContent.setPriority(0);
-			if (item.meta.date != null && typeof(item.meta.date) != "undefined") {
-				var creaDesc:string = item.meta.date.toString();
-				var creaDate:any = DateJS.parse(creaDesc);
-				feedContent.setCreationDate(creaDate);
-				feedContent.setObsoleteDate(creaDate.addDays(7));
-			}
-			feedContent.setDurationToDisplay(10000);
-
-			feedContent.setTitle(item.meta.title);
-			feedContent.setDescription(item.meta.description);
-			feedContent.setUrl(item.meta.xmlUrl);
-			feedContent.setLanguage(item.meta.language);
-			if(typeof(item.meta.image.url) != "undefined") {
-				feedContent.setLogo(item.meta.image.url);
-			}
-
-
-			var pubDate : any = DateJS.parse(item.pubDate);
-
-			var feedNode : FeedNode = new FeedNode(item.guid, 0, pubDate, pubDate.addDays(7), parseInt(self.getParams().InfoDuration));
-			feedNode.setTitle(item.title);
-			feedNode.setDescription(item.description);
-			feedNode.setSummary(item.summary);
-			feedNode.setAuthor(item.author);
-			feedNode.setUrl(item.link);
-			if(item.image != null && typeof(item.image) != "undefined" && item.image.url != null && typeof(item.image.url) != "undefined") {
-				feedNode.setMediaUrl(item.image.url);
-			}
-
-			feedContent.addFeedNode(feedNode);
-
-			self.getSourceNamespaceManager().sendNewInfoToClient(feedContent);
-
-		}, function(err) {
+		this.fetch(self.getParams().FeedURL, self.buildFeedContentFromItem, function(err) {
 			if (err) {
 				//console.log(err, err.stack);
 				Logger.error(err);
 			}
 		});
 	}
+
+	buildFeedContentFromItem = function(item) {
+		var feedContent:FeedContent = new FeedContent();
+
+		feedContent.setId(uuid.v1());
+		feedContent.setPriority(0);
+		if (item.meta.date != null && typeof(item.meta.date) != "undefined") {
+			var creaDesc:string = item.meta.date.toString();
+			var creaDate:any = DateJS.parse(creaDesc);
+			feedContent.setCreationDate(creaDate);
+			feedContent.setObsoleteDate(creaDate.addDays(7));
+		}
+		feedContent.setDurationToDisplay(10000);
+
+		feedContent.setTitle(item.meta.title);
+		feedContent.setDescription(item.meta.description);
+		feedContent.setUrl(item.meta.xmlUrl);
+		feedContent.setLanguage(item.meta.language);
+		if(typeof(item.meta.image.url) != "undefined") {
+			feedContent.setLogo(item.meta.image.url);
+		}
+
+
+		var pubDate : any = DateJS.parse(item.pubDate);
+
+		var feedNode : FeedNode = new FeedNode(item.guid, 0, pubDate, pubDate.addDays(7), parseInt(this.getParams().InfoDuration));
+		feedNode.setTitle(item.title);
+		feedNode.setDescription(item.description);
+		feedNode.setSummary(item.summary);
+		feedNode.setAuthor(item.author);
+		feedNode.setUrl(item.link);
+
+		if(item.image != null && typeof(item.image) != "undefined" && item.image.url != null && typeof(item.image.url) != "undefined") {
+			feedNode.setMediaUrl(item.image.url);
+		}
+
+		feedContent.addFeedNode(feedNode);
+
+		this.getSourceNamespaceManager().sendNewInfoToClient(feedContent);
+
+	};
 
 	fetch(feed, itemProcessFunction, errorCB) {
 		var req = request(feed, {timeout: 10000, pool: false});
