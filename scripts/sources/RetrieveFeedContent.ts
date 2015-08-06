@@ -47,7 +47,7 @@ class RetrieveFeedContent extends SourceItf {
 			feedContent.setCreationDate(creaDate);
 			feedContent.setObsoleteDate(creaDate.addDays(7));
 		}
-		feedContent.setDurationToDisplay(10000);
+		feedContent.setDurationToDisplay(this.getParams().InfoDuration);
 
 		feedContent.setTitle(item.meta.title);
 		feedContent.setDescription(item.meta.description);
