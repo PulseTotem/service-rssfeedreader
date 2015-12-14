@@ -1,5 +1,6 @@
 /**
- * @author Christian Brel <christian@the6thscreen.fr, ch.brel@gmail.com>
+ * @author Christian Brel <christian@pulsetotem.fr, ch.brel@gmail.com>
+ * @author Simon Urli <simon@pulsetotem.fr>
  */
 
 /// <reference path="../t6s-core/core-backend/scripts/server/SourceServer.ts" />
@@ -7,7 +8,7 @@
 
 /// <reference path="./RSSFeedReaderNamespaceManager.ts" />
 
-
+/// <reference path="./sources/RetrieveFeedContent.ts" />
 
 /**
  * Represents the The 6th Screen RSSFeedReader' Service.
@@ -16,8 +17,6 @@
  * @extends SourceServer
  */
 class RSSFeedReader extends SourceServer {
-
-
 
     /**
      * Constructor.
@@ -40,6 +39,8 @@ class RSSFeedReader extends SourceServer {
         var self = this;
 
         this.addNamespace("RSSFeedReader", RSSFeedReaderNamespaceManager);
+
+		var test = new RetrieveFeedContent({ "URL" : "http://www.lemonde.fr/rss/une.xml", "Limit" : "2", "InfoDuration" : "10"}, null);
     }
 }
 
