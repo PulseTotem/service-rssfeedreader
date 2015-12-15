@@ -1,6 +1,6 @@
 /**
- * @author Christian Brel <christian@the6thscreen.fr, ch.brel@gmail.com>
- * @author Simon Urli <simon@the6thscreen.fr>
+ * @author Christian Brel <christian@pulsetotem.fr, ch.brel@gmail.com>
+ * @author Simon Urli <simon@pulsetotem.fr>
  */
 
 /// <reference path="../t6s-core/core-backend/scripts/server/SourceNamespaceManager.ts" />
