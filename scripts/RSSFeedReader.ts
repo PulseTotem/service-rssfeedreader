@@ -39,8 +39,6 @@ class RSSFeedReader extends SourceServer {
         var self = this;
 
         this.addNamespace("RSSFeedReader", RSSFeedReaderNamespaceManager);
-
-		var test = new RetrieveFeedContent({ "URL" : "http://www.lemonde.fr/rss/une.xml", "Limit" : "2", "InfoDuration" : "10"}, null);
     }
 }
 

@@ -11,9 +11,8 @@
 
 var FeedParser : any = require('feedparser');
 var request : any = require('request');
-var datejs : any = require('datejs');
+var moment = require('moment');
 
-var DateJS : any = <any>Date;
 var uuid : any = require('node-uuid');
 
 /**
@@ -69,14 +68,15 @@ class RetrieveFeedContent extends SourceItf {
 
 			feedContent.setId(itemsList[0].meta.xmlUrl);
 			feedContent.setPriority(0);
-			//TODO : Change for momentJS
+
 			if (itemsList[0].meta.date != null && typeof(itemsList[0].meta.date) != "undefined") {
 				var creaDesc:string = itemsList[0].meta.date.toString();
-				var creaDate:any = DateJS.parse(creaDesc);
-				feedContent.setCreationDate(creaDate);
-				feedContent.setObsoleteDate(creaDate.addDays(7));
+				var creaDate:any = moment(new Date(creaDesc));
+				feedContent.setCreationDate(creaDate.toDate());
+				var obsoleteDate:any = moment(creaDate).add(7, 'day');
+				feedContent.setObsoleteDate(obsoleteDate.toDate());
 			}
-			feedContent.setDurationToDisplay(self.getParams().InfoDuration);
+			feedContent.setDurationToDisplay(parseInt(self.getParams().InfoDuration));
 
 			feedContent.setTitle(itemsList[0].meta.title);
 			feedContent.setDescription(itemsList[0].meta.description);
@@ -87,9 +87,10 @@ class RetrieveFeedContent extends SourceItf {
 			}
 
 			itemsList.forEach(function(item) {
-				var pubDate:any = DateJS.parse(item.pubDate);
+				var pubDate:any = moment(new Date(item.pubDate));
+				var obsoleteDate:any = moment(pubDate).add(7, 'day');
 
-				var feedNode:FeedNode = new FeedNode(item.guid, 0, pubDate, pubDate.addDays(7), parseInt(self.getParams().InfoDuration));
+				var feedNode:FeedNode = new FeedNode(item.guid, 0, pubDate.toDate(), obsoleteDate.toDate(), parseInt(self.getParams().InfoDuration));
 				feedNode.setTitle(item.title);
 				feedNode.setDescription(item.description);
 				feedNode.setSummary(item.summary);
@@ -102,8 +103,6 @@ class RetrieveFeedContent extends SourceItf {
 
 				feedContent.addFeedNode(feedNode);
 			});
-
-			Logger.debug(feedContent);
 
 			self.getSourceNamespaceManager().sendNewInfoToClient(feedContent);
 		} else {
