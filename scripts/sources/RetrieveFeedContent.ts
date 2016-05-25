@@ -157,7 +157,8 @@ class RetrieveFeedContent extends SourceItf {
 
 		// Some feeds do not respond without user-agent and accept headers.
 		req.setHeader('user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36');
-		req.setHeader('accept', 'text/html,application/xhtml+xml');
+		// For fixing issue with beepeers RSS. Really need it?
+		//req.setHeader('accept', 'text/html,application/xhtml+xml');
 
 		req.on('error', self.errorCB);
 
