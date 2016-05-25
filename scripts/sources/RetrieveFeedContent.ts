@@ -1,5 +1,6 @@
 /**
- * @author Simon Urli <simon@the6thscreen.fr>
+ * @author Christian Brel <christian@pulsetotem.fr, ch.brel@gmail.com>
+ * @author Simon Urli <simon@pulsetotem.fr>
  */
 
 
@@ -10,13 +11,29 @@
 
 var FeedParser : any = require('feedparser');
 var request : any = require('request');
-var datejs : any = require('datejs');
+var moment = require('moment');
 
-var DateJS : any = <any>Date;
 var uuid : any = require('node-uuid');
 
+/**
+ * Represents RSSFeedReader' Source : RetrieveFeedContent.
+ * Retrieve all items of an RSS Feed.
+ * Parameters :
+ * - URL: Feed's URL
+ * - InfoDuration : Duration for each item
+ * - Limit : Limit of the numer of items to retrieve (0 = no limit)
+ *
+ * @class RetrieveFeedContent
+ * @extends SourceItf
+ */
 class RetrieveFeedContent extends SourceItf {
 
+	/**
+	 * Constructor.
+	 *
+	 * @param {JSON} params - The params used by the source call.
+	 * @param {RSSFeedReaderNamespaceManager} feedReaderNamespaceManager - The SourceNamespaceManager associated to this source.
+	 */
 	constructor(params : any, feedReaderNamespaceManager : RSSFeedReaderNamespaceManager) {
 		super(params, feedReaderNamespaceManager);
 
@@ -25,59 +42,116 @@ class RetrieveFeedContent extends SourceItf {
 		}
 	}
 
+	/**
+	 * Launch the Source job !
+	 *
+	 * @method run
+	 */
 	public run() {
 		var self = this;
 
-		this.fetch(self.getParams().FeedURL, self.buildFeedContentFromItem, function(err) {
-			if (err) {
-				//console.log(err, err.stack);
-				Logger.error(err);
-			}
-		});
+		this.fetch(self.getParams().URL);
 	}
 
-	buildFeedContentFromItem = function(item) {
-		var feedContent:FeedContent = new FeedContent();
-
-		feedContent.setId(uuid.v1());
-		feedContent.setPriority(0);
-		if (item.meta.date != null && typeof(item.meta.date) != "undefined") {
-			var creaDesc:string = item.meta.date.toString();
-			var creaDate:any = DateJS.parse(creaDesc);
-			feedContent.setCreationDate(creaDate);
-			feedContent.setObsoleteDate(creaDate.addDays(7));
+	errorCB(err) {
+		if (err) {
+			//console.log(err, err.stack);
+			Logger.error(err);
 		}
-		feedContent.setDurationToDisplay(this.getParams().InfoDuration);
+	}
 
-		feedContent.setTitle(item.meta.title);
-		feedContent.setDescription(item.meta.description);
-		feedContent.setUrl(item.meta.xmlUrl);
-		feedContent.setLanguage(item.meta.language);
-		if(typeof(item.meta.image.url) != "undefined") {
-			feedContent.setLogo(item.meta.image.url);
+	buildFeedContentFromItemsList(itemsList) {
+		var self = this;
+
+		if(itemsList.length > 0) {
+			var feedContent:FeedContent = new FeedContent();
+
+			feedContent.setId(itemsList[0].meta.xmlUrl);
+			feedContent.setPriority(0);
+
+			if (itemsList[0].meta.date != null && typeof(itemsList[0].meta.date) != "undefined") {
+				var creaDesc:string = itemsList[0].meta.date.toString();
+				var creaDate:any = moment(new Date(creaDesc));
+				feedContent.setCreationDate(creaDate.toDate());
+				var obsoleteDate:any = moment(creaDate).add(7, 'day');
+				feedContent.setObsoleteDate(obsoleteDate.toDate());
+			}
+			feedContent.setDurationToDisplay(parseInt(self.getParams().InfoDuration));
+
+			feedContent.setTitle(itemsList[0].meta.title);
+			feedContent.setDescription(itemsList[0].meta.description);
+			feedContent.setUrl(itemsList[0].meta.xmlUrl);
+			feedContent.setLanguage(itemsList[0].meta.language);
+			if (typeof(itemsList[0].meta.image.url) != "undefined") {
+				feedContent.setLogo(itemsList[0].meta.image.url);
+			}
+
+			itemsList.forEach(function(item) {
+				var pubDate:any = moment(new Date(item.pubDate));
+				var obsoleteDate:any = moment(pubDate).add(7, 'day');
+
+				var feedNode:FeedNode = new FeedNode(item.guid, 0, pubDate.toDate(), obsoleteDate.toDate(), parseInt(self.getParams().InfoDuration));
+				feedNode.setTitle(item.title);
+				feedNode.setDescription(item.description);
+				feedNode.setSummary(item.summary);
+				feedNode.setAuthor(item.author);
+				feedNode.setUrl(item.link);
+
+				if (item.image != null && typeof(item.image) != "undefined" && item.image.url != null && typeof(item.image.url) != "undefined") {
+					feedNode.setMediaUrl(item.image.url);
+				}
+
+				feedContent.addFeedNode(feedNode);
+			});
+
+			self.getSourceNamespaceManager().sendNewInfoToClient(feedContent);
+		} else {
+			var feedContent:FeedContent = new FeedContent();
+
+			feedContent.setId(uuid.v1());
+			feedContent.setPriority(0);
+
+			self.getSourceNamespaceManager().sendNewInfoToClient(feedContent);
 		}
 
+	}
 
-		var pubDate : any = DateJS.parse(item.pubDate);
+	fetch(feed) {
+		var self = this;
+		var alreadyProcess = false;
 
-		var feedNode : FeedNode = new FeedNode(item.guid, 0, pubDate, pubDate.addDays(7), parseInt(this.getParams().InfoDuration));
-		feedNode.setTitle(item.title);
-		feedNode.setDescription(item.description);
-		feedNode.setSummary(item.summary);
-		feedNode.setAuthor(item.author);
-		feedNode.setUrl(item.link);
-
-		if(item.image != null && typeof(item.image) != "undefined" && item.image.url != null && typeof(item.image.url) != "undefined") {
-			feedNode.setMediaUrl(item.image.url);
+		var limit = parseInt(self.getParams().Limit);
+		if(limit == 0) {
+			limit = Infinity;
 		}
+		var itemsList = new Array();
 
-		feedContent.addFeedNode(feedNode);
+		var feedparser = new FeedParser();
 
-		this.getSourceNamespaceManager().sendNewInfoToClient(feedContent);
+		feedparser.on('error', self.errorCB);
 
-	};
+		feedparser.on('end', function() {
+			if(!alreadyProcess) {
+				self.buildFeedContentFromItemsList(itemsList);
+				alreadyProcess = true;
+			}
+		});
 
-	fetch(feed, itemProcessFunction, errorCB) {
+		feedparser.on('readable', function() {
+			var stream = this;
+			if(itemsList.length < limit) {
+				var item = stream.read();
+				if(item != null) {
+					itemsList.push(item);
+				}
+			} else {
+				if(!alreadyProcess) {
+					self.buildFeedContentFromItemsList(itemsList);
+					alreadyProcess = true;
+				}
+			}
+		});
+
 		var req = request(feed, {timeout: 10000, pool: false});
 		req.setMaxListeners(50);
 
@@ -85,35 +159,15 @@ class RetrieveFeedContent extends SourceItf {
 		req.setHeader('user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36');
 		req.setHeader('accept', 'text/html,application/xhtml+xml');
 
-		var feedparser = new FeedParser();
+		req.on('error', self.errorCB);
 
-		// Define our handlers
-		req.on('error', errorCB);
-
-		req.on('response', function(res) {
-			var stream = this;
-
-			if (!(res.statusCode >= 200 && res.statusCode < 300)) {
-				Logger.debug("Bad status code for URL: "+feed+" Code: "+res.statusCode);
-				return this.emit('error', new Error('Bad status code'));
-				//Logger.error("Bad status code.");
+		req.on('response', function(response) {
+			if (!(response.statusCode >= 200 && response.statusCode < 300)) {
+				Logger.debug("Bad status code for URL: " + feed + " Code: " + response.statusCode);
+				self.errorCB(new Error('Bad status code'));
 			}
 
-			stream.pipe(feedparser);
-		});
-
-		feedparser.on('error', errorCB);
-
-		feedparser.on('readable', function() {
-
-			// This is where the action is!
-			var stream = this;
-			var item;
-			//var meta = this.meta // **NOTE** the "meta" is always available in the context of the feedparser instance
-
-			while (item = stream.read()) {
-				itemProcessFunction(item);
-			}
+			req.pipe(feedparser);
 		});
 	}
 }
