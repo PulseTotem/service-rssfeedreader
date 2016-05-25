@@ -93,7 +93,8 @@ class RetrieveFeedContent extends SourceItf {
 		req.on('response', function(res) {
 			var stream = this;
 
-			if (res.statusCode != 200) {
+			if (!(res.statusCode >= 200 && res.statusCode < 300)) {
+				Logger.debug("Bad status code for URL: "+feed+" Code: "+res.statusCode);
 				return this.emit('error', new Error('Bad status code'));
 				//Logger.error("Bad status code.");
 			}
