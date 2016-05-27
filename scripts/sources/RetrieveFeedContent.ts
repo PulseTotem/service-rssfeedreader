@@ -101,8 +101,8 @@ class RetrieveFeedContent extends SourceItf {
 					feedNode.setMediaUrl(item.image.url);
 				} else {
 
-					if (item.enclosure != null && typeof(item.enclosure) != "undefined" && item.enclosure.url != null && typeof(item.enclosure.url) != "undefined") {
-						feedNode.setMediaUrl(item.enclosure.url);
+					if (item.enclosures != null && item.enclosures.length > 0) {
+						feedNode.setMediaUrl(item.enclosures[0].url);
 					}
 				}
 
